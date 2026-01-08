@@ -1,38 +1,43 @@
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export const Hero = () => {
   const [precio, setPrecio] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const formData = new FormData(e.target);
-  const data = Object.fromEntries(formData.entries());
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
 
-  data.year = parseInt(data.year);
-  data.km_driven = parseInt(data.km_driven);
-  data.seats = parseInt(data.seats);
-  data.engine = parseFloat(data.engine);
-  data.max_power = parseFloat(data.max_power);
-  data.Mileage = parseFloat(data.Mileage);
+    data.year = parseInt(data.year);
+    data.km_driven = parseInt(data.km_driven);
+    data.seats = parseInt(data.seats);
+    data.engine = parseFloat(data.engine);
+    data.max_power = parseFloat(data.max_power);
+    data.Mileage = parseFloat(data.Mileage);
 
-  try {
-    const res = await fetch("http://localhost:5000/predict", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const res = await fetch("http://localhost:5000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    const precioEnDolares = (result.precio_estimado * 0.012).toFixed(2);
-    setPrecio(precioEnDolares);
-  } catch (error) {
-    console.error("Error al predecir el precio:", error);
-  }
-};
+      const precioEnDolares = (result.precio_estimado * 0.012).toFixed(2);
+      setPrecio(precioEnDolares);
+    } catch (error) {
+      console.error("Error al predecir el precio:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
@@ -51,7 +56,7 @@ const handleSubmit = async (e) => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
+
             <div className="flex flex-col">
               <label htmlFor="name" className="mb-2 font-semibold text-lg">Marca</label>
               <select id="name" name="name" required className="text-black px-4 py-3 rounded-lg bg-white shadow-md focus:ring-2">
@@ -136,8 +141,13 @@ const handleSubmit = async (e) => {
           </div>
 
           <div className="flex justify-center mt-6">
-            <button type="submit" className="bg-gradient-to-r from-neutral-600 to-neutral-800 hover:from-neutral-700 hover:to-neutral-900 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-lg cursor-pointer">
-              Predecir Precio
+            <button
+              type="submit"
+              disabled={loading}
+              className={`bg-gradient-to-r from-neutral-600 to-neutral-800 text-white font-bold py-4 px-8 rounded-lg shadow-lg text-lg flex items-center gap-2 ${loading ? 'opacity-75 cursor-not-allowed' : 'hover:from-neutral-700 hover:to-neutral-900 hover:shadow-xl transform hover:scale-105 transition-all duration-200 cursor-pointer'}`}
+            >
+              {loading && <Loader2 className="animate-spin w-5 h-5" />}
+              {loading ? 'Calculando...' : 'Predecir Precio'}
             </button>
           </div>
         </form>
@@ -151,3 +161,4 @@ const handleSubmit = async (e) => {
     </main>
   );
 };
+
